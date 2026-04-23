@@ -1,0 +1,328 @@
+import React, { useState } from 'react';
+import { Calendar, Clock, MapPin, Plus, Trash2, ExternalLink, Car, Coffee, Info, Map as MapIcon, Navigation, Wallet, Users, CreditCard } from 'lucide-react';
+
+const initialData = [
+  {
+    day: "Ngày 24",
+    date: "24/04",
+    activities: [
+      { id: 1, time: "19:00 - 02:00", activity: "Lái xe từ Sài Gòn đi Châu Đốc", location: "Thành phố Hồ Chí Minh", mapLink: "https://www.google.com/maps/search/Thành+phố+Hồ+Chí+Minh", type: "drive" },
+      { id: 2, time: "02:00 - 03:00", activity: "Viếng Miếu Bà Chúa Xứ Núi Sam", location: "Miếu Bà Chúa Xứ Núi Sam", mapLink: "https://maps.app.goo.gl/3Xp5D5rRk7uW4uY6A", type: "visit" },
+      { id: 3, time: "03:00 - 09:00", activity: "Check-in khách sạn & Nghỉ ngơi", location: "Châu Đốc, An Giang", mapLink: "https://www.google.com/maps/search/Khách+sạn+Châu+Đốc", type: "rest" },
+    ]
+  },
+  {
+    day: "Ngày 25",
+    date: "25/04",
+    activities: [
+      { id: 4, time: "09:00 - 10:00", activity: "Ăn sáng & Cà phê", location: "Châu Đốc", mapLink: "", type: "food" },
+      { id: 5, time: "10:00 - 13:00", activity: "Tham quan Rừng tràm Trà Sư", location: "Rừng tràm Trà Sư", mapLink: "https://maps.app.goo.gl/8e2Y6N8QJ5jWpWfH7", type: "visit" },
+      { id: 6, time: "13:00 - 14:00", activity: "Ăn trưa đặc sản", location: "Khu du lịch Trà Sư", mapLink: "", type: "food" },
+      { id: 7, time: "14:00 - 17:00", activity: "Di chuyển đi Cần Thơ", location: "Cần Thơ", mapLink: "https://www.google.com/maps/search/Cần+Thơ", type: "drive" },
+      { id: 8, time: "17:00 - 18:00", activity: "Nhận phòng & Tắm rửa", location: "Ninh Kiều, Cần Thơ", mapLink: "", type: "rest" },
+      { id: 9, time: "18:00 - Muộn", activity: "Tham gia Lễ hội tại Cần Thơ", location: "Phố đi bộ Ninh Kiều", mapLink: "", type: "event" },
+    ]
+  },
+  {
+    day: "Ngày 26",
+    date: "26/04",
+    activities: [
+      { id: 10, time: "06:00 - 08:00", activity: "Đi dạo Bến Ninh Kiều / Chợ nổi Cái Răng", location: "Bến Ninh Kiều", mapLink: "https://maps.app.goo.gl/C2zYfLwY3M3Xf1T8A", type: "visit" },
+      { id: 11, time: "08:00 - 09:00", activity: "Ăn sáng đặc sản", location: "Chợ đêm Ninh Kiều", mapLink: "", type: "food" },
+      { id: 12, time: "09:00 - 12:00", activity: "Tiếp tục đi Lễ Hội / Mua sắm", location: "Cần Thơ", mapLink: "", type: "event" },
+      { id: 13, time: "12:00 - 14:00", activity: "Ăn trưa & Nghỉ ngơi", location: "Thành phố Cần Thơ", mapLink: "", type: "food" },
+      { id: 14, time: "14:00 - 18:00", activity: "Khởi hành về lại Sài Gòn", location: "Thành phố Hồ Chí Minh", mapLink: "https://www.google.com/maps/search/Sài+Gòn", type: "drive" },
+    ]
+  }
+];
+
+const initialExpenses = [
+  { id: 1, item: "Xăng xe + Cao tốc", amount: 800000, payer: "Thiên-Loan" },
+  { id: 2, item: "Vé Rừng tràm Trà Sư", amount: 450000, payer: "Tuấn" },
+  { id: 3, item: "Ăn tối Cần Thơ", amount: 600000, payer: "Thiên-Loan" },
+];
+
+export default function App() {
+  const [schedule, setSchedule] = useState(initialData);
+  const [activeTab, setActiveTab] = useState(0);
+  const [expenses, setExpenses] = useState(initialExpenses);
+
+  // --- Logic Lịch Trình ---
+  const addActivity = (dayIndex) => {
+    const newSchedule = [...schedule];
+    const newId = Math.max(0, ...newSchedule.flatMap(d => d.activities.map(a => a.id))) + 1;
+    newSchedule[dayIndex].activities.push({
+      id: newId, time: "00:00 - 00:00", activity: "Hoạt động mới", location: "Địa điểm", mapLink: "", type: "other"
+    });
+    setSchedule(newSchedule);
+  };
+
+  const removeActivity = (dayIndex, activityId) => {
+    const newSchedule = [...schedule];
+    newSchedule[dayIndex].activities = newSchedule[dayIndex].activities.filter(a => a.id !== activityId);
+    setSchedule(newSchedule);
+  };
+
+  const updateActivity = (dayIndex, activityId, field, value) => {
+    const newSchedule = [...schedule];
+    const activity = newSchedule[dayIndex].activities.find(a => a.id === activityId);
+    if (activity) {
+      activity[field] = value;
+      setSchedule(newSchedule);
+    }
+  };
+
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'drive': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'visit': return 'bg-green-100 text-green-700 border-green-200';
+      case 'rest': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'food': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'event': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const generateRouteUrl = (activities) => {
+    const locations = activities
+      .filter(a => a.location && a.location !== "Địa điểm")
+      .map(a => encodeURIComponent(a.location));
+    if (locations.length < 2) return null;
+    const origin = locations[0];
+    const destination = locations[locations.length - 1];
+    const waypoints = locations.slice(1, -1).join('|');
+    return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
+  };
+
+  // --- Logic Chi Phí ---
+  const addExpense = () => {
+    const newId = Math.max(0, ...expenses.map(e => e.id)) + 1;
+    setExpenses([...expenses, { id: newId, item: "Mục chi mới", amount: 0, payer: "Thiên-Loan" }]);
+  };
+
+  const updateExpense = (id, field, value) => {
+    setExpenses(expenses.map(e => e.id === id ? { ...e, [field]: value } : e));
+  };
+
+  const removeExpense = (id) => {
+    setExpenses(expenses.filter(e => e.id !== id));
+  };
+
+  const totalThienLoan = expenses.filter(e => e.payer === "Thiên-Loan").reduce((sum, e) => sum + Number(e.amount), 0);
+  const totalTuan = expenses.filter(e => e.payer === "Tuấn").reduce((sum, e) => sum + Number(e.amount), 0);
+  const totalTrip = totalThienLoan + totalTuan;
+  const perPerson = totalTrip / 2;
+  const settlement = totalThienLoan - perPerson; // Dương: Tuấn trả Thiên | Âm: Thiên trả Tuấn
+
+  const thienLoanPercent = totalTrip > 0 ? (totalThienLoan / totalTrip) * 100 : 50;
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900 pb-20">
+      <div className="max-w-4xl mx-auto space-y-10">
+        
+        {/* Header Section */}
+        <header className="text-center">
+          <div className="inline-block bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold mb-3 uppercase tracking-widest">Hành trình Miền Tây - ChargeLink</div>
+          <h1 className="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight">Kế Hoạch & Chi Phí Chuyến Đi</h1>
+          <p className="text-slate-500 italic">Thiên & Loan - Tuấn | 24/04 - 26/04</p>
+          
+          <div className="mt-6 flex justify-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {schedule.map((day, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveTab(idx)}
+                className={`px-6 py-2 rounded-xl font-bold transition-all border-2 ${
+                  activeTab === idx 
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105' 
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300'
+                }`}
+              >
+                {day.day}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        {/* Schedule List */}
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-indigo-600" />
+                Lịch trình {schedule[activeTab].date}
+              </h2>
+              <button 
+                onClick={() => addActivity(activeTab)}
+                className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" /> Thêm mốc
+              </button>
+            </div>
+            <div className="space-y-4">
+              {schedule[activeTab].activities.map((item) => (
+                <div key={item.id} className="flex flex-col md:flex-row gap-4 p-4 rounded-2xl bg-slate-50/50 hover:bg-indigo-50/30 transition-all border border-transparent hover:border-indigo-100">
+                  <div className="w-full md:w-36 shrink-0 font-bold text-indigo-900">
+                    <div className="text-[10px] text-slate-400 uppercase mb-1 flex items-center gap-1"><Clock size={10}/> Thời gian</div>
+                    <input type="text" value={item.time} onChange={(e) => updateActivity(activeTab, item.id, 'time', e.target.value)} className="w-full bg-transparent focus:outline-none"/>
+                  </div>
+                  <div className="flex-grow space-y-1">
+                    <input type="text" value={item.activity} onChange={(e) => updateActivity(activeTab, item.id, 'activity', e.target.value)} className="w-full bg-transparent font-bold text-slate-800 focus:outline-none"/>
+                    <div className="flex items-center gap-2 text-slate-500 text-sm">
+                      <MapPin size={12}/>
+                      <input type="text" value={item.location} onChange={(e) => updateActivity(activeTab, item.id, 'location', e.target.value)} className="w-full bg-transparent focus:outline-none"/>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select value={item.type} onChange={(e) => updateActivity(activeTab, item.id, 'type', e.target.value)} className={`text-[9px] font-black px-3 py-1 rounded-full border-2 uppercase ${getTypeColor(item.type)}`}>
+                      <option value="drive">Lái xe</option><option value="visit">Điểm đến</option><option value="food">Ăn uống</option><option value="rest">Nghỉ ngơi</option>
+                    </select>
+                    <button onClick={() => removeActivity(activeTab, item.id)} className="text-slate-300 hover:text-red-500"><Trash2 size={16}/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Expense Management Section (MỚI) */}
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-emerald-600" />
+                Quản lý Chi Phí & Chia Tiền
+              </h2>
+              <button 
+                onClick={addExpense}
+                className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors flex items-center gap-1"
+              >
+                <Plus className="w-4 h-4" /> Thêm mục chi
+              </button>
+            </div>
+
+            {/* Dashboard Chi Phí */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                <div className="text-xs font-bold text-indigo-400 uppercase mb-1">Thiên-Loan đã chi</div>
+                <div className="text-xl font-black text-indigo-700">{totalThienLoan.toLocaleString()}đ</div>
+              </div>
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                <div className="text-xs font-bold text-amber-400 uppercase mb-1">Tuấn đã chi</div>
+                <div className="text-xl font-black text-amber-700">{totalTuan.toLocaleString()}đ</div>
+              </div>
+              <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                <div className="text-xs font-bold text-emerald-400 uppercase mb-1">Tổng cộng chuyến đi</div>
+                <div className="text-xl font-black text-emerald-700">{totalTrip.toLocaleString()}đ</div>
+              </div>
+            </div>
+
+            {/* Biểu đồ thanh ngang */}
+            <div className="mb-8">
+                <div className="flex justify-between text-[10px] font-bold uppercase mb-2 text-slate-400">
+                    <span>Thiên-Loan ({thienLoanPercent.toFixed(0)}%)</span>
+                    <span>Tuấn ({(100-thienLoanPercent).toFixed(0)}%)</span>
+                </div>
+                <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                    <div style={{ width: `${thienLoanPercent}%` }} className="h-full bg-indigo-500 transition-all duration-500"></div>
+                    <div className="h-full bg-amber-500 flex-grow transition-all duration-500"></div>
+                </div>
+            </div>
+
+            {/* Danh sách mục chi */}
+            <div className="space-y-3">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <div className="col-span-5">Mục chi</div>
+                <div className="col-span-3 text-right">Số tiền (VNĐ)</div>
+                <div className="col-span-3">Người chi</div>
+                <div className="col-span-1"></div>
+              </div>
+              
+              {expenses.map((exp) => (
+                <div key={exp.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 p-3 rounded-xl border border-slate-50 bg-slate-50/30 items-center">
+                  <div className="col-span-5">
+                    <input 
+                      type="text" 
+                      value={exp.item} 
+                      onChange={(e) => updateExpense(exp.id, 'item', e.target.value)}
+                      className="w-full bg-transparent font-bold text-slate-700 focus:outline-none"
+                    />
+                  </div>
+                  <div className="col-span-3 flex md:block items-center">
+                    <span className="md:hidden text-[10px] font-bold text-slate-400 mr-2">Số tiền:</span>
+                    <input 
+                      type="number" 
+                      value={exp.amount} 
+                      onChange={(e) => updateExpense(exp.id, 'amount', e.target.value)}
+                      className="w-full bg-transparent font-bold text-right text-emerald-600 focus:outline-none"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <select 
+                      value={exp.payer} 
+                      onChange={(e) => updateExpense(exp.id, 'payer', e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg text-sm p-1 font-semibold focus:outline-none"
+                    >
+                      <option value="Thiên-Loan">Thiên-Loan</option>
+                      <option value="Tuấn">Tuấn</option>
+                    </select>
+                  </div>
+                  <div className="col-span-1 text-right">
+                    <button onClick={() => removeExpense(exp.id)} className="text-slate-300 hover:text-red-500"><Trash2 size={14}/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Settlement Note */}
+            <div className="mt-8 p-4 bg-indigo-600 rounded-2xl text-white flex items-center justify-between shadow-lg">
+                <div className="flex items-center gap-3">
+                    <Users className="w-6 h-6 text-indigo-200" />
+                    <div>
+                        <div className="text-xs font-bold text-indigo-200 uppercase">Chốt sổ sau chuyến đi</div>
+                        <div className="font-bold">
+                            {settlement > 0 
+                                ? `Tuấn cần chuyển cho Thiên: ${settlement.toLocaleString()}đ` 
+                                : `Thiên cần chuyển cho Tuấn: ${Math.abs(settlement).toLocaleString()}đ`}
+                        </div>
+                    </div>
+                </div>
+                <div className="hidden sm:block text-[10px] bg-white/20 px-3 py-1 rounded-full font-bold">Chia đôi (50/50)</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Map Summary Section */}
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold flex items-center gap-2"><MapIcon className="w-5 h-5 text-indigo-600" /> Lộ trình Google Maps</h2>
+              {generateRouteUrl(schedule[activeTab].activities) && (
+                <button onClick={() => window.open(generateRouteUrl(schedule[activeTab].activities), '_blank')} className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md"><Navigation size={16}/> Mở lộ trình</button>
+              )}
+            </div>
+            <div className="aspect-video bg-slate-100 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 text-center">
+                <MapIcon className="w-12 h-12 text-slate-300 mb-2" />
+                <p className="text-slate-400 text-sm font-medium">Bản đồ lộ trình tự động hóa dựa trên địa điểm anh nhập</p>
+                <div className="flex flex-wrap justify-center gap-2 mt-4">
+                    {schedule[activeTab].activities.filter(a => a.location && a.location !== "Địa điểm").map((a, i) => (
+                        <span key={i} className="bg-white px-3 py-1 rounded-full border text-[10px] font-bold shadow-sm">{i+1}. {a.location}</span>
+                    ))}
+                </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Quick Access Footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 md:hidden flex justify-around items-center z-50 shadow-2xl">
+        <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-600 transition-colors">
+            <Calendar size={20} /><span className="text-[10px] font-bold">Lịch trình</span>
+        </button>
+        <button onClick={() => document.querySelector('.fa-wallet')?.scrollIntoView({behavior: 'smooth'})} className="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-600 transition-colors">
+            <Wallet size={20} /><span className="text-[10px] font-bold">Chi phí</span>
+        </button>
+      </div>
+    </div>
+  );
+}
